@@ -1,95 +1,118 @@
+import random
+
 WIDTH = 800
 HEIGHT = 700
 
-estado = "menu"
+# Estados do jogo
+MENU = "menu"
+JOGO = "jogo"
+MORTE = "morte"
+estado = MENU
 
-#botoes do menu
-btn_play = Rect((WIDTH // 2 - 100, HEIGHT // 2 - 25), (200, 50))
-btn_creditos = Rect((WIDTH // 2 - 100, (HEIGHT+130) // 2 - 25), (200, 50))
-btn_menu = Rect((WIDTH // 10 - 50, HEIGHT // 10 - 60), (100, 30))
+# Player e inimigo
+player = Actor("alien", (WIDTH//2, HEIGHT//2))
+inimigos = []
+velocidade = 3
 
-#player
-player = Actor('alien')
-#player.pos = 100, 56
+# Botão do menu
+botao_jogar = Rect((WIDTH//2 - 100, HEIGHT//2 - 40), (200, 50))
 
-status = False
+# Sons
+musica_menu = "menu_music"
+musica_jogo = "game_music"
+
+# Função para resetar o jogo
+def iniciar_jogo():
+    global estado, player, inimigos
+    estado = JOGO
+    player.pos = (WIDTH//2, HEIGHT//2)
+    inimigos.clear()
+    for _ in range(3):
+        spawn_inimigo()
+    
+
+# Cria inimigos em posições aleatórias
+def spawn_inimigo():
+    x = random.randint(0, WIDTH)
+    y = random.randint(0, HEIGHT)
+    inimigo = Actor("inimigo", (x, y))
+    inimigos.append(inimigo)
 
 def draw():
     screen.clear()
-    
-    if estado == "menu":
-        menu()
-    elif estado == "jogo":
-        jogo()
 
-def menu():
-    screen.draw.text("Roguelike", center=(WIDTH // 2, HEIGHT // 3), fontsize=60, color="white")
-    
-    #btn_play
-    screen.draw.filled_rect(btn_play, "darkgreen")
-    screen.draw.text("Jogar", center=btn_play.center, fontsize=40, color="white")
-    
-    #btn_creditos
-    screen.draw.filled_rect(btn_creditos, "darkgreen")
-    screen.draw.text("Créditos", center=btn_creditos.center, fontsize=40, color="white")
+    if estado == MENU:
+        screen.fill((30, 30, 30))
+        screen.draw.text("ROGUELIKE SLIME", center=(WIDTH//2, 100), fontsize=60, color="white")
+        screen.draw.filled_rect(botao_jogar, (0, 150, 0))
+        screen.draw.text("JOGAR", center=botao_jogar.center, fontsize=40, color="white")
+        
 
-def jogo():
-    screen.draw.text("teste", center=(WIDTH // 2, HEIGHT // 2), fontsize=50, color="yellow")
-    
-    screen.draw.filled_rect(btn_menu, "darkgreen")
-    screen.draw.text("Menu", center=btn_menu.center, fontsize=20, color="white")
-    
-    global status
-    if status:
-        start()
-        status = True
-    
-    player.draw()
+    elif estado == JOGO:
+        player.draw()
+        for inimigo in inimigos:
+            inimigo.draw()
 
-def create_Actor():
-    #player = Actor("alien")
-    player.pos = 100, 90
-    
-    
-    
+    elif estado == MORTE:
+        screen.fill((0, 0, 0))
+        screen.draw.text("VOCÊ MORREU!", center=(WIDTH//2, HEIGHT//2 - 30), fontsize=60, color="red")
+        screen.draw.text("Pressione qualquer tecla para voltar ao menu", center=(WIDTH//2, HEIGHT//2 + 30), fontsize=30, color="white")
+
 def update():
-    global estado
-    if estado == "jogo":
-        player_move()
-        if player.x < 10:
-            player.x = 10
-        if player.x > WIDTH-10:
-            player.x = WIDTH-10
-        if player.y < 100:
-            player.y = 100
-        if player.y > HEIGHT-20:
-            player.y = HEIGHT-20
-    
-#moves
-def player_move():
-    if keyboard.left:
-        player.x -= 3
-    if keyboard.right:
-        player.x += 3
-    if keyboard.up:
-        player.y -= 3
-    if keyboard.down:
-        player.y += 3
+    if estado == JOGO:
+        mover_player()
+        mover_inimigos()
+        checar_colisoes()
 
-def on_mouse_down(pos):
+def mover_player():
+    if keyboard.left:
+        player.x -= velocidade
+    if keyboard.right:
+        player.x += velocidade
+    if keyboard.up:
+        player.y -= velocidade
+    if keyboard.down:
+        player.y += velocidade
+
+def mover_inimigos():
+    for inimigo in inimigos:
+        dx = player.x - inimigo.x
+        dy = player.y - inimigo.y
+        dist = max(1, (dx**2 + dy**2) ** 0.5)
+        inimigo.x += velocidade * 0.5 * dx / dist
+        inimigo.y += velocidade * 0.5 * dy / dist
+
+def checar_colisoes():
     global estado
-    if estado == "menu" and btn_play.collidepoint(pos):
-        estado = "jogo"
-        
-    global status    
-    if estado == "jogo" and btn_menu.collidepoint(pos):
-        estado = "menu"
-        status = False
-        create_Actor()
-        
-def start():
+    for inimigo in inimigos:
+        if player.colliderect(inimigo):
+            estado = MORTE
+            sounds.eep.play()
+                
+            break
+
+def on_mouse_down(pos, button):
     global estado
-    if estado == "jogo":
-        create_Actor()
-    
-    
+    if estado == MENU and botao_jogar.collidepoint(pos):
+        iniciar_jogo()
+        
+    if player.collidepoint(pos):
+        sounds.eep.play()
+        
+    if estado == MORTE and button == mouse.LEFT:
+        estado = MENU
+       
+        
+        
+def on_key_down():
+    global estado
+    if estado == MORTE and False:
+        estado = MENU
+        """
+        if sounds.is_playing(musica_jogo):
+            sounds.stop(musica_jogo)
+        sounds.play(musica_menu)
+
+        """
+# Começa com música de menu
+#sounds.play(musica_menu)
