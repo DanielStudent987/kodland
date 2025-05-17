@@ -26,7 +26,7 @@ animacoes_inimigo = {
 
 velocidade = 3
 inimigos = []
-projetis = []
+projeteis = []
 
 # Botão do menu
 botao_jogar = Rect((WIDTH//2 - 100, HEIGHT//2 - 40), (200, 50))
@@ -42,23 +42,23 @@ class Player:
         self.sprite = Actor(animacoes_player[self.direcao][self.frame_atual], (WIDTH//2, HEIGHT//2))
 
     def update(self, dt):
-        moveu = False
+        
         if keyboard.left:
             self.sprite.x -= velocidade
             self.direcao = "left"
-            moveu = True
+            
         elif keyboard.right:
             self.sprite.x += velocidade
             self.direcao = "right"
-            moveu = True
+            
         elif keyboard.up:
             self.sprite.y -= velocidade
             self.direcao = "up"
-            moveu = True
+            
         elif keyboard.down:
             self.sprite.y += velocidade
             self.direcao = "down"
-            moveu = True
+            
         else:
             self.direcao = "idle"
 
@@ -73,6 +73,16 @@ class Player:
 
     def get_actor(self):
         return self.sprite
+    
+    def atirar(self):
+        dx, dy = 0, 0
+        if self.direcao == "up": dy = -1
+        elif self.direcao == "down": dy = 1
+        elif self.direcao == "left": dx = -1
+        elif self.direcao == "right": dx = 1
+
+        if dx != 0 or dy != 0:
+            projeteis.append(Projetil(self.sprite.x, self.sprite.y, dx, dy))
 
 class Inimigo:
     def __init__(self, x, y):
@@ -110,14 +120,31 @@ class Inimigo:
 
     def get_actor(self):
         return self.sprite
+    
+class Projetil:
+    def __init__(self, x, y, dx, dy):
+        self.sprite = Actor("bullet", (x, y))
+        self.dx = dx * 10
+        self.dy = dy * 10
+
+    def update(self):
+        self.sprite.x += self.dx
+        self.sprite.y += self.dy
+
+    def draw(self):
+        self.sprite.draw()
+
+    def get_actor(self):
+        return self.sprite
 
 player = Player()
 
 def iniciar_jogo():
-    global estado, inimigos, musica_jogo, player
+    global estado, inimigos, musica_jogo, player, projeteis
     estado = JOGO
     player = Player()
     inimigos.clear()
+    projeteis.clear()
     for _ in range(3):
         spawn_inimigo()
 
@@ -142,6 +169,8 @@ def draw():
         player.draw()
         for inimigo in inimigos:
             inimigo.draw()
+        for p in projeteis:
+            p.draw()
 
     elif estado == MORTE:
         screen.fill((0, 0, 0))
@@ -153,6 +182,8 @@ def update(dt):
         player.update(dt)
         for inimigo in inimigos:
             inimigo.update(dt, player.get_actor().pos)
+        for p in projeteis:
+            p.update()
         checar_colisoes()
 
 def checar_colisoes():
@@ -175,5 +206,7 @@ def on_mouse_down(pos, button):
 
 def on_key_down():
     global estado
+    if estado == JOGO and keyboard[keys.SPACE]:
+        player.atirar()
     if estado == MORTE and False:
         estado = MENU
