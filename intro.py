@@ -187,12 +187,18 @@ def update(dt):
         checar_colisoes()
 
 def checar_colisoes():
-    global estado
-    for obj in inimigos:
+    global estado, inimigos
+    for obj in inimigos[:]:
         if player.get_actor().colliderect(obj.get_actor()):
             estado = MORTE
             sounds.eep.play()
             break
+    for bullet in projeteis[:]:
+        for inimigo in inimigos[:]:
+            if bullet.get_actor().colliderect(inimigo.get_actor()):
+                inimigos.remove(inimigo)
+                projeteis.remove(bullet)
+                break
 
 def on_mouse_down(pos, button):
     global estado, musica_jogo
