@@ -216,3 +216,4 @@ def on_key_down():
         player.atirar()
     if estado == MORTE and False:
         estado = MENU
+        
