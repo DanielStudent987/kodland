@@ -26,6 +26,7 @@ animacoes_inimigo = {
 
 velocidade = 3
 inimigos = []
+enemy_number = 3
 projeteis = []
 
 # Botão do menu
@@ -83,6 +84,8 @@ class Player:
 
         if dx != 0 or dy != 0:
             projeteis.append(Projetil(self.sprite.x, self.sprite.y, dx, dy))
+            sounds.dead_enemy.play()
+            
 
 class Inimigo:
     def __init__(self, x, y):
@@ -169,8 +172,8 @@ def draw():
         player.draw()
         for inimigo in inimigos:
             inimigo.draw()
-        for p in projeteis:
-            p.draw()
+        for bullet in projeteis:
+            bullet.draw()
 
     elif estado == MORTE:
         screen.fill((0, 0, 0))
@@ -178,6 +181,7 @@ def draw():
         screen.draw.text("click na tela pra voltar ao menu", center=(WIDTH//2, HEIGHT//2 + 30), fontsize=30, color="white")
 
 def update(dt):
+    global enemy_number
     if estado == JOGO:
         player.update(dt)
         for inimigo in inimigos:
@@ -185,6 +189,11 @@ def update(dt):
         for p in projeteis:
             p.update()
         checar_colisoes()
+        
+        if len(inimigos) == 0:
+            enemy_number += 1
+            for _ in range(enemy_number): 
+                spawn_inimigo()
 
 def checar_colisoes():
     global estado, inimigos
