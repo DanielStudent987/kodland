@@ -29,11 +29,15 @@ inimigos = []
 enemy_number = 3
 projeteis = []
 
-# Botão do menu
-botao_jogar = Rect((WIDTH//2 - 100, HEIGHT//2 - 40), (200, 50))
+#Botão do menu
+botao_jogar = Rect((WIDTH//2 - 100, HEIGHT//2 - 50), (200, 50))
+botao_musica = Rect((WIDTH//2 - 100, HEIGHT//2 + 10), (200, 50))
+botao_sair = Rect((WIDTH//2 - 100, HEIGHT//2 + 70), (200, 50))
+music_control = True
 
-# Sons
+#Sons
 musica_jogo = False
+
 
 class Player:
     def __init__(self):
@@ -84,7 +88,9 @@ class Player:
 
         if dx != 0 or dy != 0:
             projeteis.append(Projetil(self.sprite.x, self.sprite.y, dx, dy))
-            sounds.dead_enemy.play()
+            
+            if music_control:
+                sounds.dead_enemy.play()
             
 
 class Inimigo:
@@ -124,6 +130,7 @@ class Inimigo:
     def get_actor(self):
         return self.sprite
     
+    
 class Projetil:
     def __init__(self, x, y, dx, dy):
         self.sprite = Actor("bullet", (x, y))
@@ -142,6 +149,8 @@ class Projetil:
 
 player = Player()
 
+
+#Inicio do jogo
 def iniciar_jogo():
     global estado, inimigos, musica_jogo, player, projeteis
     estado = JOGO
@@ -151,22 +160,39 @@ def iniciar_jogo():
     for _ in range(3):
         spawn_inimigo()
 
-    if not musica_jogo:
+    if not musica_jogo and music_control:
         sounds.musica.play(-1)
         musica_jogo = True
+
 
 def spawn_inimigo():
     x = random.randint(0, WIDTH)
     y = random.randint(0, HEIGHT)
     inimigos.append(Inimigo(x, y))
 
+
 def draw():
     screen.clear()
     if estado == MENU:
         screen.fill((30, 30, 30))
-        screen.draw.text("ROGUELIKE", center=(WIDTH//2, 100), fontsize=60, color="white")
+        screen.draw.text("Aventura Espacial", center=(WIDTH//2, 200), fontsize=60, color="white")
+        
         screen.draw.filled_rect(botao_jogar, (0, 150, 0))
         screen.draw.text("JOGAR", center=botao_jogar.center, fontsize=40, color="white")
+        
+        screen.draw.filled_rect((botao_musica), (0, 0, 150))
+        screen.draw.text("Musica e Sons", center=botao_musica.center, fontsize=40, color="white")
+        
+        screen.draw.filled_rect(botao_sair, (150, 0, 0))
+        screen.draw.text("SAIR", center=botao_sair.center, fontsize=40, color="white")
+        
+        screen.draw.text("Use as setas para mover e espaço para atirar\nMira andando na direcao que quer atirar", center=(WIDTH//2, HEIGHT//2 + 160), fontsize=30, color="green")
+        
+        if music_control:
+            sounds.menu_music.play(-1)
+        else:
+            sounds.menu_music.stop()
+            
 
     elif estado == JOGO:
         player.draw()
@@ -181,10 +207,10 @@ def draw():
         screen.draw.text("click na tela pra voltar ao menu", center=(WIDTH//2, HEIGHT//2 + 30), fontsize=30, color="white")
 
 def update(dt):
-    global enemy_number
+    global enemy_number, music_control
     if estado == JOGO:
         player.update(dt)
-        for inimigo in inimigos:
+        for inimigo in inimigos[:]:
             inimigo.update(dt, player.get_actor().pos)
         for p in projeteis:
             p.update()
@@ -192,15 +218,19 @@ def update(dt):
         
         if len(inimigos) == 0:
             enemy_number += 1
+            print("inimigos number: ", enemy_number)
             for _ in range(enemy_number): 
                 spawn_inimigo()
-
+                
+    
+        
 def checar_colisoes():
     global estado, inimigos
     for obj in inimigos[:]:
         if player.get_actor().colliderect(obj.get_actor()):
             estado = MORTE
-            sounds.eep.play()
+            if music_control:
+                sounds.eep.play()
             break
     for bullet in projeteis[:]:
         for inimigo in inimigos[:]:
@@ -210,14 +240,26 @@ def checar_colisoes():
                 break
 
 def on_mouse_down(pos, button):
-    global estado, musica_jogo
+    global estado, musica_jogo, music_control
     if estado == MENU and botao_jogar.collidepoint(pos):
+        sounds.menu_music.stop()
         iniciar_jogo()
+        
+    if estado == MENU and botao_musica.collidepoint(pos):
+        if music_control:
+            music_control = False
+        else:
+            music_control = True
+            
+    if estado == MENU and botao_sair.collidepoint(pos):
+        exit()      
 
     if estado == MORTE and button == mouse.LEFT:
         estado = MENU
         musica_jogo = False
         sounds.musica.stop()
+        
+    
 
 def on_key_down():
     global estado
