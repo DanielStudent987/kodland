@@ -24,7 +24,7 @@ animacoes_inimigo = {
     "right": ["enemy_right1", "enemy_right2"]
 }
 
-velocidade = 3
+velocidade = 5
 inimigos = []
 enemy_number = 3
 projeteis = []
@@ -222,6 +222,15 @@ def update(dt):
             for _ in range(enemy_number): 
                 spawn_inimigo()
                 
+        if player.get_actor().x < 0:
+            player.get_actor().x = 0
+        elif player.get_actor().x > WIDTH:
+            player.get_actor().x = WIDTH
+        if player.get_actor().y < 0:
+            player.get_actor().y = 0
+        elif player.get_actor().y > HEIGHT:
+            player.get_actor().y = HEIGHT
+                
     
         
 def checar_colisoes():
@@ -233,7 +242,7 @@ def checar_colisoes():
                 sounds.eep.play()
             break
     for bullet in projeteis[:]:
-        for inimigo in inimigos[:]:
+        for inimigo in inimigos:
             if bullet.get_actor().colliderect(inimigo.get_actor()):
                 inimigos.remove(inimigo)
                 projeteis.remove(bullet)
