@@ -16,7 +16,7 @@ animacoes_player = {
     "right": ["walk_d1", "walk_d2", "walk_d3"]
 }
 
-animacoes_inimigo = {
+animacoes_enemy = {
     "idle": ["enemy_right1", "enemy_idle3"],
     "up": ["enemy_up1", "enemy_up2"],
     "down": ["enemy_down1", "enemy_down2"],
@@ -24,19 +24,19 @@ animacoes_inimigo = {
     "right": ["enemy_right1", "enemy_right2"]
 }
 
-velocidade = 5
-inimigos = []
+velocity = 5
+enemies = []
 enemy_number = 3
-projeteis = []
+bullets = []
 
 #Botão do menu
-botao_jogar = Rect((WIDTH//2 - 100, HEIGHT//2 - 50), (200, 50))
-botao_musica = Rect((WIDTH//2 - 100, HEIGHT//2 + 10), (200, 50))
-botao_sair = Rect((WIDTH//2 - 100, HEIGHT//2 + 70), (200, 50))
+button_play = Rect((WIDTH//2 - 100, HEIGHT//2 - 50), (200, 50))
+button_music = Rect((WIDTH//2 - 100, HEIGHT//2 + 10), (200, 50))
+button_exit = Rect((WIDTH//2 - 100, HEIGHT//2 + 70), (200, 50))
 music_control = True
 
 #Sons
-musica_jogo = False
+music_game = False
 
 
 class Player:
@@ -49,19 +49,19 @@ class Player:
     def update(self, dt):
         
         if keyboard.left:
-            self.sprite.x -= velocidade
+            self.sprite.x -= velocity
             self.direcao = "left"
             
         elif keyboard.right:
-            self.sprite.x += velocidade
+            self.sprite.x += velocity
             self.direcao = "right"
             
         elif keyboard.up:
-            self.sprite.y -= velocidade
+            self.sprite.y -= velocity
             self.direcao = "up"
             
         elif keyboard.down:
-            self.sprite.y += velocidade
+            self.sprite.y += velocity
             self.direcao = "down"
             
         else:
@@ -87,7 +87,7 @@ class Player:
         elif self.direcao == "right": dx = 1
 
         if dx != 0 or dy != 0:
-            projeteis.append(Projetil(self.sprite.x, self.sprite.y, dx, dy))
+            bullets.append(Projetil(self.sprite.x, self.sprite.y, dx, dy))
             
             if music_control:
                 sounds.dead_enemy.play()
@@ -104,8 +104,8 @@ class Inimigo:
         dx = player_pos[0] - self.sprite.x
         dy = player_pos[1] - self.sprite.y
         dist = max(1, (dx**2 + dy**2) ** 0.5)
-        self.sprite.x += velocidade * 0.5 * dx / dist
-        self.sprite.y += velocidade * 0.5 * dy / dist
+        self.sprite.x += velocity * 0.5 * dx / dist
+        self.sprite.y += velocity * 0.5 * dy / dist
 
         if dx < 0 and abs(dx) > abs(dy):
             self.direction = "left"
@@ -121,8 +121,8 @@ class Inimigo:
         self.timer += dt
         if self.timer >= 0.15:
             self.timer = 0
-            self.frame = (self.frame + 1) % len(animacoes_inimigo[self.direction])
-            self.sprite.image = animacoes_inimigo[self.direction][self.frame]
+            self.frame = (self.frame + 1) % len(animacoes_enemy[self.direction])
+            self.sprite.image = animacoes_enemy[self.direction][self.frame]
 
     def draw(self):
         self.sprite.draw()
@@ -152,23 +152,23 @@ player = Player()
 
 #Inicio do jogo
 def iniciar_jogo():
-    global estado, inimigos, musica_jogo, player, projeteis
+    global estado, enemies, music_game, player, bullets
     estado = JOGO
     player = Player()
-    inimigos.clear()
-    projeteis.clear()
+    enemies.clear()
+    bullets.clear()
     for _ in range(3):
-        spawn_inimigo()
+        spawn_enemy()
 
-    if not musica_jogo and music_control:
+    if not music_game and music_control:
         sounds.musica.play(-1)
-        musica_jogo = True
+        music_game = True
 
 
-def spawn_inimigo():
+def spawn_enemy():
     x = random.randint(0, WIDTH)
     y = random.randint(0, HEIGHT)
-    inimigos.append(Inimigo(x, y))
+    enemies.append(Inimigo(x, y))
 
 
 def draw():
@@ -177,14 +177,14 @@ def draw():
         screen.fill((30, 30, 30))
         screen.draw.text("Aventura Espacial", center=(WIDTH//2, 200), fontsize=60, color="white")
         
-        screen.draw.filled_rect(botao_jogar, (0, 150, 0))
-        screen.draw.text("JOGAR", center=botao_jogar.center, fontsize=40, color="white")
+        screen.draw.filled_rect(button_play, (0, 150, 0))
+        screen.draw.text("JOGAR", center=button_play.center, fontsize=40, color="white")
         
-        screen.draw.filled_rect((botao_musica), (0, 0, 150))
-        screen.draw.text("Musica e Sons", center=botao_musica.center, fontsize=40, color="white")
+        screen.draw.filled_rect((button_music), (0, 0, 150))
+        screen.draw.text("Musica e Sons", center=button_music.center, fontsize=40, color="white")
         
-        screen.draw.filled_rect(botao_sair, (150, 0, 0))
-        screen.draw.text("SAIR", center=botao_sair.center, fontsize=40, color="white")
+        screen.draw.filled_rect(button_exit, (150, 0, 0))
+        screen.draw.text("SAIR", center=button_exit.center, fontsize=40, color="white")
         
         screen.draw.text("Use as setas para mover e espaço para atirar\nMira andando na direcao que quer atirar", center=(WIDTH//2, HEIGHT//2 + 160), fontsize=30, color="green")
         
@@ -196,9 +196,9 @@ def draw():
 
     elif estado == JOGO:
         player.draw()
-        for inimigo in inimigos:
-            inimigo.draw()
-        for bullet in projeteis:
+        for enemy in enemies:
+            enemy.draw()
+        for bullet in bullets:
             bullet.draw()
 
     elif estado == MORTE:
@@ -210,17 +210,17 @@ def update(dt):
     global enemy_number, music_control
     if estado == JOGO:
         player.update(dt)
-        for inimigo in inimigos[:]:
-            inimigo.update(dt, player.get_actor().pos)
-        for p in projeteis:
+        for enemy in enemies[:]:
+            enemy.update(dt, player.get_actor().pos)
+        for p in bullets:
             p.update()
         checar_colisoes()
         
-        if len(inimigos) == 0:
+        if len(enemies) == 0:
             enemy_number += 1
-            print("inimigos number: ", enemy_number)
+            print("enemies number: ", enemy_number)
             for _ in range(enemy_number): 
-                spawn_inimigo()
+                spawn_enemy()
                 
         if player.get_actor().x < 0:
             player.get_actor().x = 0
@@ -234,38 +234,38 @@ def update(dt):
     
         
 def checar_colisoes():
-    global estado, inimigos
-    for obj in inimigos[:]:
+    global estado, enemies
+    for obj in enemies[:]:
         if player.get_actor().colliderect(obj.get_actor()):
             estado = MORTE
             if music_control:
                 sounds.eep.play()
             break
-    for bullet in projeteis[:]:
-        for inimigo in inimigos:
-            if bullet.get_actor().colliderect(inimigo.get_actor()):
-                inimigos.remove(inimigo)
-                projeteis.remove(bullet)
+    for bullet in bullets[:]:
+        for enemy in enemies:
+            if bullet.get_actor().colliderect(enemy.get_actor()):
+                enemies.remove(enemy)
+                bullets.remove(bullet)
                 break
 
 def on_mouse_down(pos, button):
-    global estado, musica_jogo, music_control
-    if estado == MENU and botao_jogar.collidepoint(pos):
+    global estado, music_game, music_control
+    if estado == MENU and button_play.collidepoint(pos):
         sounds.menu_music.stop()
         iniciar_jogo()
         
-    if estado == MENU and botao_musica.collidepoint(pos):
+    if estado == MENU and button_music.collidepoint(pos):
         if music_control:
             music_control = False
         else:
             music_control = True
             
-    if estado == MENU and botao_sair.collidepoint(pos):
+    if estado == MENU and button_exit.collidepoint(pos):
         exit()      
 
     if estado == MORTE and button == mouse.LEFT:
         estado = MENU
-        musica_jogo = False
+        music_game = False
         sounds.musica.stop()
         
     
