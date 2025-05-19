@@ -210,7 +210,7 @@ def update(dt):
     global enemy_number, music_control
     if estado == JOGO:
         player.update(dt)
-        for enemy in enemies[:]:
+        for enemy in enemies:
             enemy.update(dt, player.get_actor().pos)
         for p in bullets:
             p.update()
@@ -218,9 +218,13 @@ def update(dt):
         
         if len(enemies) == 0:
             enemy_number += 1
-            print("enemies number: ", enemy_number)
+
             for _ in range(enemy_number): 
                 spawn_enemy()
+                
+        if estado == MORTE:
+            enemies.clear()
+            enemy_number = 3
                 
         if player.get_actor().x < 0:
             player.get_actor().x = 0
@@ -234,10 +238,12 @@ def update(dt):
     
         
 def checar_colisoes():
-    global estado, enemies
-    for obj in enemies[:]:
+    global estado, enemies, enemy_number
+    for obj in enemies:
         if player.get_actor().colliderect(obj.get_actor()):
+            enemies.clear()
             estado = MORTE
+            enemy_number = 3
             if music_control:
                 sounds.eep.play()
             break
@@ -249,7 +255,7 @@ def checar_colisoes():
                 break
 
 def on_mouse_down(pos, button):
-    global estado, music_game, music_control
+    global estado, music_game, music_control, enemies, enemy_number
     if estado == MENU and button_play.collidepoint(pos):
         sounds.menu_music.stop()
         iniciar_jogo()
@@ -266,6 +272,8 @@ def on_mouse_down(pos, button):
     if estado == MORTE and button == mouse.LEFT:
         estado = MENU
         music_game = False
+        enemies.clear()
+        enemy_number = 3
         sounds.musica.stop()
         
     
