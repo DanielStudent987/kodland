@@ -233,8 +233,7 @@ def update(dt):
         if player.get_actor().y < 0:
             player.get_actor().y = 0
         elif player.get_actor().y > HEIGHT:
-            player.get_actor().y = HEIGHT
-                
+            player.get_actor().y = HEIGHT     
     
         
 def checar_colisoes():
